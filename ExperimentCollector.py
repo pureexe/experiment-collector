@@ -16,7 +16,7 @@ class ExperimentCollector(object):
     
     def drop(self):
         c = self.cursor()
-        for table in ['experiment','parameter','outcome','fact']:
+        for table in ['experiment','parameter','fact']:
             c.execute("drop table if exists {}".format(table))
         self.commit()
 
@@ -42,14 +42,6 @@ class ExperimentCollector(object):
                 name text,
                 value real
                 
-            )
-            """
-        )
-        c.execute(
-            """
-            create table if not exists outcome(
-                experiment integer,
-                name text
             )
             """
         )
@@ -81,7 +73,7 @@ class ExperimentCollector(object):
             self.connect()
         return self.__connection.cursor()
 
-    def add(self, name, parameter, outcome,variable, description = '',step = 10,
+    def add(self, name, parameter,variable, description = '',step = 10,
             step_function = lambda initial,current_step: initial+current_step,
             compute_function = lambda inputs: {}
         ):
@@ -111,12 +103,6 @@ class ExperimentCollector(object):
             VALUES (?,?,?)
         '''
         c.executemany(sql_parameter_insert,parameter_records)
-        outcome_records = [(experiment_id,v) for v in outcome]
-        sql_outcome_insert = '''
-            INSERT INTO outcome(experiment,name) 
-            VALUES (?,?)
-        '''
-        c.executemany(sql_outcome_insert,outcome_records)
         self.commit()
         return experiment_id
     
