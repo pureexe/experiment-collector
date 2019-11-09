@@ -179,7 +179,8 @@ class ExperimentCollector(object):
                 )
                 y_axis = [r['value'] for r in c.fetchall()]
                 axs[i].scatter(x_axis, y_axis)
-                axs[i].plot(x_axis,trend(x_axis, y_axis))
+                axs[i].plot(x_axis,trend(x_axis, y_axis),label=variable)
+                axs[i].legend()
         fig.tight_layout()
         try:
             plt.show()
