@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class ExperimentCollector(object):
-    def __init__(self,database = ':memory:',empty = True):
+    def __init__(self,database = ':memory:',empty = False):
         self.__database_path = database
         self.__connection = None
         if empty:
@@ -11,16 +11,19 @@ class ExperimentCollector(object):
         self.create()
 
     def empty(self):
+        """ clear the old experiment """
         self.drop()
         self.create()
     
     def drop(self):
+        """ remove table in database """
         c = self.cursor()
         for table in ['experiment','parameter','fact']:
             c.execute("drop table if exists {}".format(table))
         self.commit()
 
     def create(self):
+        """ create table in database """
         c = self.cursor()
         c.execute(
             """
@@ -59,6 +62,7 @@ class ExperimentCollector(object):
 
 
     def connect(self):
+        """ connect database """
         self.__connection = sqlite3.connect(self.__database_path)
         self.__connection.row_factory = sqlite3.Row 
 
@@ -67,8 +71,10 @@ class ExperimentCollector(object):
         self.__connection.close()   
         self.__connection = None
     def commit(self):
+        """ commit database after write to update value """
         self.__connection.commit()
     def cursor(self):
+        """ get cursor of database to read/write it """
         if self.__connection is None:
             self.connect()
         return self.__connection.cursor()
@@ -77,6 +83,7 @@ class ExperimentCollector(object):
             step_function = lambda initial,current_step: initial+current_step,
             compute_function = lambda inputs: {}
         ):
+        """ add new experiment """
         c = self.cursor()
         sql_experiment_insert = '''
             INSERT INTO experiment(
@@ -107,8 +114,9 @@ class ExperimentCollector(object):
         return experiment_id
     
     def run(self):
+        """ run the experiment """
         c = self.cursor()
-        c.execute('select * from experiment')
+        c.execute('SELECT * FROM experiment')
         experiments_rows = c.fetchall()
         for experiment in experiments_rows:
             compute_function = dill.loads(experiment['compute_function'])
@@ -116,7 +124,7 @@ class ExperimentCollector(object):
             for i in range(experiment['step']):
                 exp_id = experiment['id']
                 c.execute(
-                    'select name,value from parameter where ?',
+                    'SELECT name,value FROM parameter WHERE ?',
                     (exp_id,)
                 )
                 inputs = {r['name']:r['value'] for r in c.fetchall()}
@@ -132,9 +140,20 @@ class ExperimentCollector(object):
                 c.executemany(sql_fact,values)
         self.commit()
 
-    def plot(self):
+    def plot(self,experiment_id = None):
+        """ plot the result chart of the experiment """
         c = self.cursor()
-        c.execute('SELECT id,name,description,variable,step FROM experiment')
+        where_experiment_id = ''
+        if not experiment_id is None:
+            if isinstance(experiment_id, list):
+                exp_ids = ','.join([ str(f) for f in experiment_id ])
+                where_experiment_id = ' WHERE id in ({})'.format(exp_ids)
+            else:
+              where_experiment_id = ' WHERE id = {}'.format(experiment_id)
+        c.execute(
+            'SELECT id,name,description,variable,step FROM experiment'
+            + where_experiment_id
+        )
         experiments = c.fetchall()
         exp_count = len(experiments)
         fig, axs = plt.subplots(exp_count)
@@ -162,8 +181,7 @@ class ExperimentCollector(object):
             c.execute(
                 '''
                     SELECT DISTINCT variable FROM fact 
-                    WHERE experiment = ?
-                    AND variable != ?
+                    WHERE experiment = ? AND variable != ?
                     ORDER BY variable ASC
                 ''',
                 (experiments[i]['id'],experiments[i]['variable'])
@@ -172,7 +190,8 @@ class ExperimentCollector(object):
             for variable in variables:
                 c.execute(
                     '''
-                        SELECT value FROM fact WHERE experiment = ? AND variable = ?
+                        SELECT value FROM fact
+                        WHERE experiment = ? AND variable = ?
                         ORDER BY step ASC 
                     ''',
                     (experiments[i]['id'], variable)
@@ -182,6 +201,7 @@ class ExperimentCollector(object):
                 axs[i].plot(x_axis,trend(x_axis, y_axis),label=variable)
                 axs[i].legend()
         fig.tight_layout()
+        # save into image on headless machine
         try:
             plt.show()
         except:

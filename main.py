@@ -4,7 +4,9 @@ from ExperimentCollector import ExperimentCollector
 # Create Collector by call the instructor
 # You can pass a file name to use  database in file systeem
 # Or leave it blank to use in meoroy database
-collector = ExperimentCollector('test.db')
+# You also pass empty=True parameter to clear table if you want to restart experiment
+# or empty=False to continue your work from last time
+collector = ExperimentCollector('test.db',empty=True)
 
 # our experiment will have 3 parameter to adjust 
 parameter = {
@@ -59,4 +61,4 @@ collector.add(
 collector.run()
 
 # then plot the output to see the trend of parameter on each output
-collector.plot()
+collector.plot([2,3])
