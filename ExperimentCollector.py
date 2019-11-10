@@ -140,7 +140,7 @@ class ExperimentCollector(object):
                 c.executemany(sql_fact,values)
         self.commit()
 
-    def plot(self,experiment_id = None):
+    def plot(self,experiment_id = None,image_path = None):
         """ plot the result chart of the experiment """
         c = self.cursor()
         where_experiment_id = ''
@@ -202,10 +202,13 @@ class ExperimentCollector(object):
                 axs[i].legend()
         fig.tight_layout()
         # save into image on headless machine
-        try:
-            plt.show()
-        except:
-            plt.savefig("plot.png")   
+        if not image_path is None:
+            plt.savefig(image_path)
+        else:
+            try:
+                plt.show()
+            except:
+                plt.savefig("plot.png")   
         self.commit()     
 
     def __del__(self):
