@@ -25,7 +25,7 @@ compute = lambda v: {
     'c': v['alpha']-3*v['gamma']/v['beta']
 }
 
-# You have to defined how varie the parameter
+# You have to defined how vary the parameter
 step = lambda i,s: i+0.25*s
 
 # add experiment info into database
@@ -38,7 +38,7 @@ collector.add(
     step_function=step
 )
 collector.add(
-    'varie beta',
+    'vary beta',
     parameter,
     'beta',
     'How beta variable change output a,b,c',
