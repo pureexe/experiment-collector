@@ -1,5 +1,8 @@
 language: python
 install:
   - pip install -r requirements.txt
+  - pip install tensorflow==2.0
 script:
   - pytest
+  - python example.py
+  - python example_tensorflow.py
