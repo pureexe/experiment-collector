@@ -1,9 +1,18 @@
 # Experiment Collector
 [![Build Status](https://travis-ci.org/pureexe/experiment-collector.svg?branch=master)](https://travis-ci.org/pureexe/experiment-collector)
 
-Experiment Collector is part of IST-699 Databae System. This is python library that use to store experiment result into `sqlite` then plot the result into scatter chart with trend line for analyze the trend of parameter.
+Experiment Collector is part of IST-699 Databae System. This is python library that use to store experiment result into [sqlite](https://docs.python.org/3/library/sqlite3.html) then plot the result into scatter chart with trend line for analyze the trend of parameter.
+
+**features**
+- support multiple input parameter
+- support multiple output parameter
+- easy integrate with other computation framework like [NumPy](https://numpy.org/) or  [Tensorflow](https://tensorflow.org), we also provide example for use with Tensorflow
+
+**limitation**
+- Experiment Collector only support floating point as input parameter and experiment result. we don't support input and output in other data type like string,image or tensor because we can't plot trend line from that data type
 
 ## Getting started
+### Let's do experiment!
 Let's create simple experiment that try to find the trend of parameter **c** when  `c=a*b` and we varie **a** for 10 times by increase 0.25 each step.
 ```python
 from ExperimentCollector import ExperimentCollector
@@ -16,6 +25,18 @@ collector.plot()
 Here is a result 
 
 ![Result](https://i.imgur.com/F9Epjq0.png)
+
+### Prerequisite
+You need to reach this requirement to run example code
+- **Python 3.x**
+- **numpy, matplotlib** - thoese require to plot trend line
+- **dill** - we store your `compute_function` and `step_function` into database. unfortunately we have problem with python's built-in [pickle](https://docs.python.org/3/library/pickle.html) so we decide to use [dill](https://github.com/uqfoundation/dill) instead.
+-  (optional) **tensorflow >= 2.0** - use to run example_tensorflow.py, no need if you don't want to use with tensorflow
+
+You can install those require package (except [Tensorflow](https://tensorflow.org)! it's only use to run  [example_tensorflow.py](https://github.com/pureexe/experiment-collector/blob/master/example_tensorflow.py)) by run 
+```bash
+pip install -r requirements.txt
+```
 
 ## Useful Example
 
@@ -68,6 +89,7 @@ do commit of sqlite database. useful if you do insert though the cursor
 ```python
 c = collector.commit()
 ```
+
 
 ## License
 [![MIT License](https://img.shields.io/github/license/pureexe/experiment-collector)](https://github.com/pureexe/experiment-collector/blob/master/LICENSE)
