@@ -46,7 +46,7 @@ id = collector.add(name, parameter, variable, description = '',step = 10,
 ```
 - **name** name of the experiment
 - **parameter** parameter of the experiement must be define in dict format. for example, `{'a':0,'b':1}` which is parameter **a** has initial value 0 and parameter **b** has initial parameter 1 
-- **variable** name of parameter which will varie in this experiement for example 'a'
+- **variable** name of parameter which will vary in this experiement for example 'a'
 - **step** number of iteration on this experiment
 - **step_function** by default we increase **variable** by 1 in each iteration. but sometime you might want to decrease or increase with exponential growth so you can the function that define the way to change the variable
 - **compute_function** defined how each parameter inteact and how many output we get.
