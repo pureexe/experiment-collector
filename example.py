@@ -61,4 +61,4 @@ collector.add(
 collector.run()
 
 # then plot the output to see the trend of parameter on each output
-collector.plot([2,3])
+collector.plot()
