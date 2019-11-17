@@ -1,4 +1,4 @@
-import os,sqlite3,dill
+import os, sqlite3, dill
 import numpy as np 
 import matplotlib.pyplot as plt
 
@@ -18,7 +18,7 @@ class ExperimentCollector(object):
     def drop(self):
         """ remove table in database """
         c = self.cursor()
-        for table in ['experiment','parameter','fact']:
+        for table in ['experiment','parameter','fact','crash']:
             c.execute("drop table if exists {}".format(table))
         self.commit()
 
@@ -58,13 +58,23 @@ class ExperimentCollector(object):
             )
             """
         )
+        c.execute(
+            """
+            create table if not exists crash(
+                experiment integer,
+                step integer,
+                value real,
+                message text
+            )
+            """
+        )
         self.commit()
 
 
     def connect(self):
         """ connect database """
         self.__connection = sqlite3.connect(self.__database_path)
-        self.__connection.row_factory = sqlite3.Row 
+        self.__connection.row_factory = sqlite3.Row
 
     def disconnect(self):
         """ disconnect database """
@@ -130,15 +140,24 @@ class ExperimentCollector(object):
                 inputs = {r['name']:r['value'] for r in c.fetchall()}
                 variable = experiment['variable']
                 inputs[variable] = step_function(inputs[variable],i) 
-                outcome = compute_function(inputs)
-                values = [(exp_id,i,k,v) for k,v in outcome.items()]
-                values = values + [(exp_id,i,variable,inputs[variable])]
-                sql_fact = '''
-                    INSERT INTO fact(experiment,step,variable,value) 
-                    VALUES (?,?,?,?)
-                '''
-                c.executemany(sql_fact,values)
-        self.commit()
+                try:
+                    outcome = compute_function(inputs)                    
+                except BaseException as err:
+                    sql_crash = '''
+                        INSERT INTO crash(experiment,step,value,message)
+                        VALUES (?,?,?,?)
+                    ''' 
+                    c.execute(sql_crash,(exp_id,i,inputs[variable],str(err)))
+                else:
+                    values = [(exp_id,i,k,v) for k,v in outcome.items()]
+                    values = values + [(exp_id,i,variable,inputs[variable])]
+                    sql_fact = '''
+                        INSERT INTO fact(experiment,step,variable,value) 
+                        VALUES (?,?,?,?)
+                    '''
+                    c.executemany(sql_fact,values)
+                finally:
+                    self.commit()
 
     def plot(self,experiment_id = None,image_path = None):
         """ plot the result chart of the experiment """

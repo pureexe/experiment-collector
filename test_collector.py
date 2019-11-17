@@ -3,9 +3,9 @@ from ExperimentCollector import ExperimentCollector
 import sqlite3
 import os
 
-def test_01(tmp_path):
+def test_general(tmp_path):
     # prepare test
-    collector = ExperimentCollector(str(tmp_path / 'test_01.db'),True)
+    collector = ExperimentCollector(str(tmp_path / 'test_general.db'),True)
     # define essential parameter
     parameter = {'alpha':1,'beta':1,'gamma':1} 
     compute = lambda v: {
@@ -30,11 +30,11 @@ def test_01(tmp_path):
     del collector
     # run test
     # test if db exist
-    assert os.path.isfile(str(tmp_path / 'test_01.db')) 
+    assert os.path.isfile(str(tmp_path / 'test_general.db')) 
     # test if plot exist
     assert os.path.isfile(str(tmp_path / 'plot_out.png'))     
     # connect to db
-    conn = sqlite3.connect(str(tmp_path / 'test_01.db'))
+    conn = sqlite3.connect(str(tmp_path / 'test_general.db'))
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     # test if experiment table work correctly
@@ -59,4 +59,33 @@ def test_01(tmp_path):
     c.execute('SELECT * FROM fact')
     facts = c.fetchall()
     assert len(facts) == 40
-    c.close()
+    conn.close()
+
+def test_crash_handle(tmp_path):
+     # prepare test
+    collector = ExperimentCollector(str(tmp_path / 'test_crash_handle.db'),True)
+    # define essential parameter
+    parameter = {'alpha':1,'beta':1,'gamma':1} 
+    # make simple crash
+    def compute(v):
+        raise Exception('simeple crash')
+    collector.add(
+        'change alpha',
+        parameter,
+        'alpha',
+        'study to how alpha value affact the output a,b,c',
+        compute_function=compute,
+    )
+    # run experiment
+    collector.run()
+    del collector
+     # test if db exist
+    assert os.path.isfile(str(tmp_path / 'test_crash_handle.db')) 
+    conn = sqlite3.connect(str(tmp_path / 'test_crash_handle.db'))
+    c = conn.cursor()
+    # test if crash table work correctly
+    c.execute('SELECT * FROM crash')
+    crashs = c.fetchall()
+    assert len(crashs) == 10
+    conn.close()
+
