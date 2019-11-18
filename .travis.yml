@@ -4,5 +4,6 @@ install:
   - pip install tensorflow==2.0.0
 script:
   - pytest
-  - python example.py
-  - python example_tensorflow.py
+  - pip install .
+  - python example/simple.py
+  - python example/tensorflow.py
