@@ -15,7 +15,7 @@ Experiment Collector is part of IST-699 Databae System. This is python library t
 ### Let's do experiment!
 Let's create simple experiment that try to find the trend of parameter **c** when  `c=a*b` and we varie **a** for 10 times by increase 0.25 each step.
 ```python
-from ExperimentCollector import ExperimentCollector
+from experimentcollector import ExperimentCollector
 collector = ExperimentCollector()
 collector.add('test c=a*b',{'a':2,'b':1},'b',step=10,step_function = lambda i,c: i + 0.25 * c,compute_function = lambda v:{'c': v['a'] * v['b']})
 collector.run()
