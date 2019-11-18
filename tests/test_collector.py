@@ -1,5 +1,5 @@
 # This is test file that define for pytest
-from ExperimentCollector import ExperimentCollector
+from experimentcollector import ExperimentCollector
 import sqlite3
 import os
 

@@ -33,20 +33,31 @@ You need to reach this requirement to run example code
 - **dill** - we store your `compute_function` and `step_function` into database. unfortunately we have problem with python's built-in [pickle](https://docs.python.org/3/library/pickle.html) so we decide to use [dill](https://github.com/uqfoundation/dill) instead.
 -  (optional) **tensorflow >= 2.0** - use to run example_tensorflow.py, no need if you don't want to use with tensorflow
 
-You can install those require package (except [Tensorflow](https://tensorflow.org)! it's only use to run  [example_tensorflow.py](https://github.com/pureexe/experiment-collector/blob/master/example_tensorflow.py)) by run 
+You can install those require package (except [Tensorflow](https://tensorflow.org)! it's only use to run  [example_tensorflow.py](https://github.com/pureexe/experiment-collector/blob/master/example/tensorflow.py)) by run 
 ```bash
 pip install -r requirements.txt
 ```
 
+### Installation
+
+You can install this module using pip by following this command.
+
+```bash
+git clone https://github.com/pureexe/experiment-collector.git
+pip install .
+```
+
+After installed, you can use it from anywhere in your computer by `from experimentcollector import ExperimentCollector`
+
 ## Useful Example
 
-We provide some example that show you how to use Experiment Collector in the [example.py](https://github.com/pureexe/experiment-collector/blob/master/example.py) and also provide an example to use with [Tensorflow](https://tensorflow.org) the popular deep learning framework in the [example_tensorflow.py](https://github.com/pureexe/experiment-collector/blob/master/example_tensorflow.py)
+We provide some example that show you how to use Experiment Collector in the [example.py](https://github.com/pureexe/experiment-collector/blob/master/example/simple.py) and also provide an example to use with [Tensorflow](https://tensorflow.org) the popular deep learning framework in the [example_tensorflow.py](https://github.com/pureexe/experiment-collector/blob/master/example/tensorflow.py)
 
 ## Usage
 ### import 
 Before you use Experiment Collector you need to import it by
 ```python
-from the.location.of.ExperimentCollector.py import ExperimentCollector
+from experimentcollector import ExperimentCollector
 ```
 
 ### construct

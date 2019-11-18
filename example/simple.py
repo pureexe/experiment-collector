@@ -1,5 +1,7 @@
+# simple example of experimentcollector
+
 #Load ExperimentCollector
-from ExperimentCollector import ExperimentCollector
+from experimentcollector import ExperimentCollector
 
 # Create Collector by call the instructor
 # You can pass a file name to use  database in file systeem

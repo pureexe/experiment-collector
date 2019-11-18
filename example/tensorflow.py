@@ -1,8 +1,12 @@
 # here is example to use Experiment Collector with tensorflow 2.0
 
+# import from above directory
+import sys
+sys.path.append("..")
+
 # load tensorflow and Experimental Collector
 import tensorflow as tf
-from ExperimentCollector import ExperimentCollector
+from experimentcollector import ExperimentCollector
 
 # create Collector object 
 # database will be store into memory by default
