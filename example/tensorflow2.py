@@ -1,9 +1,5 @@
 # here is example to use Experiment Collector with tensorflow 2.0
 
-# import from above directory
-import sys
-sys.path.append("..")
-
 # load tensorflow and Experimental Collector
 import tensorflow as tf
 from experimentcollector import ExperimentCollector
@@ -14,6 +10,7 @@ collector = ExperimentCollector()
 
 # define tensorflow's computation graph
 # for example c = a^2 * b
+
 @tf.function
 def compute_graph(inputs):
     a = tf.constant(inputs['a'])
