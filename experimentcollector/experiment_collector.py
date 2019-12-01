@@ -1,4 +1,4 @@
-import os, sqlite3
+import os, sqlite3,pkgutil
 import numpy as np 
 import matplotlib.pyplot as plt
 
@@ -46,8 +46,8 @@ class ExperimentCollector(object):
     def create(self):
         """ create table in database """
         c = self.cursor()
-        with open(os.path.dirname(__file__) + '/schema.sql') as fp:
-            c.executescript(fp.read())
+        byte_schema = pkgutil.get_data(__package__, 'schema.sql')
+        c.executescript(byte_schema.decode('utf-8'))
         self.commit()
 
 
