@@ -11,49 +11,40 @@ from experimentcollector import ExperimentCollector
 collector = ExperimentCollector('test.db',empty=True)
 
 # our experiment will have 3 parameter to adjust 
-parameter = {
+collector.initial({
     'alpha':1,
     'beta':1,
     'gamma':1
-} 
+})
 
 # then you write how to compute the parameter
 # since it's a function. you also can call other complex code
 # or framework like tensorflow and store the result back
 # here we will store value to 3 variables name a,b and c
-compute = lambda v: {
+collector.compute(lambda v: {
     'a': -v['alpha']-2*v['beta']-2*v['gamma']+6,
     'b': -v['alpha']-2*v['beta']+v['gamma'],
     'c': v['alpha']-3*v['gamma']/v['beta']
-}
+})
 
 # You have to defined how vary the parameter
-step = lambda i,s: i+0.25*s
+collector.step(lambda i,s: i+0.25*s,10)
 
 # add experiment info into database
 collector.add(
-    'change alpha',
-    parameter,
     'alpha',
-    'study to how alpha value affact the output a,b,c',
-    compute_function=compute,
-    step_function=step
+    'change alpha',
+    'study to how alpha value affact the output a,b,c'
 )
 collector.add(
-    'vary beta',
-    parameter,
     'beta',
-    'How beta variable change output a,b,c',
-    compute_function=compute,
-    step_function = step
+    'vary beta',
+    'How beta variable change output a,b,c'
 )
 collector.add(
-    'gamma observe',
-    parameter,
     'gamma',
+    'gamma observe',
     'output a,b,c that create from difference gamma value',
-    compute_function=compute,
-    step_function = step
 )
 
 # run an experiment

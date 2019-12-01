@@ -5,9 +5,9 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="experimentcollector", # Replace with your own username
-    version="0.0.1",
+    version="0.1.0",
     author="Pakkapon Phongthawee",
-    author_email="1930804@vistec.ac.th",
+    author_email="pakkapon.p_s19@vistec.ac.th",
     description="This is python library that use to store experiment result into sqlite then plot the result into scatter chart with trend line for analyze the trend of parameter.e",
     long_description=long_description,
     long_description_content_type="text/markdown",

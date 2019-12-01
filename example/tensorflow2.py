@@ -24,18 +24,19 @@ def compute(inputs):
     outputs = compute_graph(inputs).numpy()
     return {'c':float(outputs)}
 
+collector.compute(compute)
+
 # define parameter a and b to use in the computation graph
-parameter = {
+collector.initial({
     'a':1,
     'b':3
-} 
+})
 
 # add new experiment that increase a by 1 for 10 times
+collector.step(range(1,11))
 collector.add(
-    'tensorflow computation graph',
-    parameter,
     'a',
-    compute_function=compute,
+    'tensorflow computation graph',
 )
 
 # run experiment 

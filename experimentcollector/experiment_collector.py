@@ -1,14 +1,35 @@
-import os, sqlite3, dill
+import os, sqlite3
 import numpy as np 
 import matplotlib.pyplot as plt
 
 class ExperimentCollector(object):
-    def __init__(self,database = ':memory:',empty = False):
+    def __init__(self,database = ':memory:', empty = False):
         self.__database_path = database
         self.__connection = None
+        self.__step_function = lambda i,s: i + 1*s
+        self.__step = 10
+        self.__initial_dict = {}
+        self.__compute_function = None
         if empty:
             self.drop()
         self.create()
+
+    def initial(self,intial_values):
+        self.__initial_dict = intial_values
+
+    def step(self,step_function,iteration = 10):
+        if callable(step_function):
+            self.__step_function = step_function
+            self.__step = iteration
+        else:
+            list_data = step_function
+            if not isinstance(list_data,list):
+                list_data = list(list_data)
+            self.__step_function = lambda _,x: list_data[x]
+            self.__step = len(list_data)
+
+    def compute(self,compute_function):
+        self.__compute_function = compute_function
 
     def empty(self):
         """ clear the old experiment """
@@ -18,56 +39,15 @@ class ExperimentCollector(object):
     def drop(self):
         """ remove table in database """
         c = self.cursor()
-        for table in ['experiment','parameter','fact','crash']:
+        for table in ['experiment','fact']:
             c.execute("drop table if exists {}".format(table))
         self.commit()
 
     def create(self):
         """ create table in database """
         c = self.cursor()
-        c.execute(
-            """
-            create table if not exists experiment(
-                id integer primary key autoincrement,
-                name text,
-                description text,
-                variable text,
-                step integer,
-                step_function  blob,
-                compute_function blob
-            )             
-            """
-        )
-        c.execute(
-            """
-            create table if not exists parameter(
-                experiment integer,
-                name text,
-                value real
-                
-            )
-            """
-        )
-        c.execute(
-            """
-            create table if not exists fact(
-                experiment integer,
-                step integer,
-                variable text,
-                value real
-            )
-            """
-        )
-        c.execute(
-            """
-            create table if not exists crash(
-                experiment integer,
-                step integer,
-                value real,
-                message text
-            )
-            """
-        )
+        with open(os.path.dirname(__file__) + '/schema.sql') as fp:
+            c.executescript(fp.read())
         self.commit()
 
 
@@ -80,79 +60,66 @@ class ExperimentCollector(object):
         """ disconnect database """
         self.__connection.close()   
         self.__connection = None
+
     def commit(self):
         """ commit database after write to update value """
         self.__connection.commit()
+
     def cursor(self):
         """ get cursor of database to read/write it """
         if self.__connection is None:
             self.connect()
         return self.__connection.cursor()
 
-    def add(self, name, parameter,variable, description = '',step = 10,
-            step_function = lambda initial,current_step: initial+current_step,
-            compute_function = lambda inputs: {}
-        ):
+    def add(self ,variable, name=None, description=None):
         """ add new experiment """
+        if not variable in self.__initial_dict:
+            raise NameError('"{}" must define in initial method before use'.format(variable))
         c = self.cursor()
         sql_experiment_insert = '''
             INSERT INTO experiment(
-                name, description, variable, step,
-                step_function, compute_function
+                exp_name,
+                exp_description,
+                var_name
             ) VALUES (
-                ?,?,?,?,?,?
+                ?,?,?
             )
         '''
         values = (
             name,
             description,
-            variable,
-            step,
-            dill.dumps(step_function),
-            dill.dumps(compute_function)
+            variable
         )
         c.execute(sql_experiment_insert,values)
-        self.commit()
-        experiment_id = c.lastrowid
-        parameter_records = [(experiment_id,k,v) for k,v in parameter.items()]
-        sql_parameter_insert = '''
-            INSERT INTO parameter(experiment,name,value) 
-            VALUES (?,?,?)
-        '''
-        c.executemany(sql_parameter_insert,parameter_records)
-        self.commit()
-        return experiment_id
+        self.commit()  
+        return c.lastrowid 
     
     def run(self):
         """ run the experiment """
+        if self.__compute_function == None:
+            raise NotImplementedError("compute function is require to implement by user")
         c = self.cursor()
         c.execute('SELECT * FROM experiment')
         experiments_rows = c.fetchall()
         for experiment in experiments_rows:
-            compute_function = dill.loads(experiment['compute_function'])
-            step_function = dill.loads(experiment['step_function'])
-            for i in range(experiment['step']):
-                exp_id = experiment['id']
-                c.execute(
-                    'SELECT name,value FROM parameter WHERE ?',
-                    (exp_id,)
-                )
-                inputs = {r['name']:r['value'] for r in c.fetchall()}
-                variable = experiment['variable']
-                inputs[variable] = step_function(inputs[variable],i) 
+            for i in range(self.__step):
+                exp_id = experiment['exp_id']                
+                inputs = self.__initial_dict.copy()
+                variable = experiment['var_name']
+                inputs[variable] = self.__step_function(inputs[variable], i)
                 try:
-                    outcome = compute_function(inputs)                    
+                    outcome = self.__compute_function(inputs)
                 except BaseException as err:
                     sql_crash = '''
-                        INSERT INTO crash(experiment,step,value,message)
-                        VALUES (?,?,?,?)
-                    ''' 
-                    c.execute(sql_crash,(exp_id,i,inputs[variable],str(err)))
+                        INSERT INTO crash(exp_id,step_id,var_name,val,errmsg)
+                        VALUES (?,?,?,?,?)
+                    '''
+                    c.execute(sql_crash,(exp_id,i,variable,inputs[variable],str(err)))
                 else:
                     values = [(exp_id,i,k,v) for k,v in outcome.items()]
                     values = values + [(exp_id,i,variable,inputs[variable])]
                     sql_fact = '''
-                        INSERT INTO fact(experiment,step,variable,value) 
+                        INSERT INTO fact(exp_id,step_id,var_name,val) 
                         VALUES (?,?,?,?)
                     '''
                     c.executemany(sql_fact,values)
@@ -170,7 +137,7 @@ class ExperimentCollector(object):
             else:
               where_experiment_id = ' WHERE id = {}'.format(experiment_id)
         c.execute(
-            'SELECT id,name,description,variable,step FROM experiment'
+            'SELECT exp_id,exp_name,exp_description,var_name FROM experiment'
             + where_experiment_id
         )
         experiments = c.fetchall()
@@ -180,42 +147,42 @@ class ExperimentCollector(object):
             axs = [axs]
         trend = lambda a,b: np.poly1d(np.polyfit(a, b, 1))(a)
         for i in range(exp_count):
-            axs[i].set_title(experiments[i]['name'])
-            axs[i].set_xlabel(experiments[i]['description'])
+            axs[i].set_title(experiments[i]['exp_name'])
+            axs[i].set_xlabel(experiments[i]['exp_description'])
             # build x-axis 
             x_axis = []
             c.execute(
                 '''
-                SELECT value FROM fact
-                WHERE variable = ?
-                AND experiment = ?
-                ORDER BY step ASC
+                SELECT val FROM fact
+                WHERE var_name = ?
+                AND exp_id = ?
+                ORDER BY step_id ASC
                 ''',
                 (
-                    experiments[i]['variable'],
-                    experiments[i]['id']
+                    experiments[i]['var_name'],
+                    experiments[i]['exp_id']
                 )
             )
-            x_axis = [r['value'] for r in c.fetchall()]
+            x_axis = [r['val'] for r in c.fetchall()]
             c.execute(
                 '''
-                    SELECT DISTINCT variable FROM fact 
-                    WHERE experiment = ? AND variable != ?
-                    ORDER BY variable ASC
+                    SELECT DISTINCT var_name FROM fact 
+                    WHERE exp_id = ? AND var_name != ?
+                    ORDER BY var_name ASC
                 ''',
-                (experiments[i]['id'],experiments[i]['variable'])
+                (experiments[i]['exp_id'],experiments[i]['var_name'])
             )
-            variables = [r['variable'] for r in c.fetchall()]
+            variables = [r['var_name'] for r in c.fetchall()]
             for variable in variables:
                 c.execute(
                     '''
-                        SELECT value FROM fact
-                        WHERE experiment = ? AND variable = ?
-                        ORDER BY step ASC 
+                        SELECT val FROM fact
+                        WHERE exp_id = ? AND var_name = ?
+                        ORDER BY step_id ASC 
                     ''',
-                    (experiments[i]['id'], variable)
+                    (experiments[i]['exp_id'], variable)
                 )
-                y_axis = [r['value'] for r in c.fetchall()]
+                y_axis = [r['val'] for r in c.fetchall()]
                 axs[i].scatter(x_axis, y_axis)
                 axs[i].plot(x_axis,trend(x_axis, y_axis),label=variable)
                 axs[i].legend()
