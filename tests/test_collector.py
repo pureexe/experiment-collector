@@ -46,7 +46,6 @@ def test_general(tmp_path):
     assert exps[0]['exp_name'] == 'change alpha'
     assert exps[0]['exp_description'] == 'study to how alpha value affact the output a,b,c'
     assert exps[0]['var_name'] == 'alpha'
-    assert exps[0]['step_id'] == 10
     # test if fact table work correctly
     c.execute('SELECT * FROM fact')
     facts = c.fetchall()
