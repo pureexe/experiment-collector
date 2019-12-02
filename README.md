@@ -20,8 +20,9 @@ Let's create simple experiment that try to find the trend of parameter **c** whe
 from experimentcollector import ExperimentCollector
 
 collector =  ExperimentCollector()
-collector.compute(lambda  v:{'c': v['a']  * v['b']}))
-collector.step(lambda  i,c: i +  0.25  * c, 10)
+collector.initial({'a':2,'b':1})
+collector.compute(lambda v:{'c': v['a'] * v['b']}))
+collector.step(lambda i,c: i + 0.25 * c, 10)
 collector.add('b','test c=a*b')
 collector.run()
 collector.plot()
