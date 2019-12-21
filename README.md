@@ -1,7 +1,7 @@
 # Experiment Collector
 [![Build Status](https://travis-ci.org/pureexe/experiment-collector.svg?branch=master)](https://travis-ci.org/pureexe/experiment-collector)
 
-Experiment Collector is part of IST-699 Databae System. This is python library that use to store experiment result into [sqlite](https://docs.python.org/3/library/sqlite3.html) then plot the result into scatter chart with trend line for analyze the trend of parameter.
+Experiment Collector is part of IST-699 Database  System. This is python library that use to store experiment result into [SQLite](https://docs.python.org/3/library/sqlite3.html) then plot the result into scatter chart with trend line for analyse the trend of parameter.
 
 **features**
 - support multiple input parameter
@@ -37,13 +37,13 @@ You need to reach this requirement to run example code
 
 -  **Python 3.x**
 
--  **numpy, matplotlib** - thoese require to plot trend line
+-  **numpy, matplotlib** - those require to plot trend line
 
 - (optional) **tensorflow >= 2.0** - use to run example_tensorflow.py, no need if you don't want to use with tensorflow
 
   
 
-You can install those require package (except [Tensorflow](https://tensorflow.org)! it's only use to run [example_tensorflow.py](https://github.com/pureexe/experiment-collector/blob/master/example/tensorflow.py)) by run
+You can install those require package (except [Tensorflow](https://tensorflow.org)! it's only use to run [example_tensorflow.py](https://github.com/pureexe/experiment-collector/blob/master/example/tensorflow2.py)) by run
 
 ```bash
 pip install -r requirements.txt
