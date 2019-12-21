@@ -111,7 +111,7 @@ class ExperimentCollector(object):
                     outcome = self.__compute_function(inputs)
                 except BaseException as err:
                     sql_crash = '''
-                        INSERT INTO crash(exp_id,step_id,var_name,val,errmsg)
+                        INSERT INTO fact(exp_id,step_id,var_name,val,errmsg) 
                         VALUES (?,?,?,?,?)
                     '''
                     c.execute(sql_crash,(exp_id,i,variable,inputs[variable],str(err)))
